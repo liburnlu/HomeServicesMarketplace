@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,8 @@ const USER_ROLES = {
     PROVIDER: "provider",
 };
 
-export default function RegisterForm() {
+export default function RegisterForm({ embedded = false }) {
+    const navigate = useNavigate();
     const [role, setRole] = useState(USER_ROLES.CUSTOMER);
 
     function handleSubmit(e) {
@@ -50,18 +52,10 @@ export default function RegisterForm() {
         // 1. supabase.auth.signUp({ email, password })
         // 2. insert into public.profiles using returned user.id
         // 3. if role === "provider", insert into public.provider_profiles
+        navigate("/home");
     }
 
-    return (
-        <Card className="w-full max-w-md">
-            <CardHeader>
-                <CardTitle>Create account</CardTitle>
-                <CardDescription>
-                    Register as a customer or service provider.
-                </CardDescription>
-            </CardHeader>
-
-            <CardContent>
+    const form = (
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="fullName">Full name</Label>
@@ -117,7 +111,7 @@ export default function RegisterForm() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="role">Account type</Label>
+                        <Label htmlFor="role">I am a</Label>
                         <select
                             id="role"
                             name="role"
@@ -125,8 +119,12 @@ export default function RegisterForm() {
                             onChange={(e) => setRole(e.target.value)}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
-                            <option value={USER_ROLES.CUSTOMER}>Customer</option>
-                            <option value={USER_ROLES.PROVIDER}>Provider</option>
+                            <option value={USER_ROLES.CUSTOMER}>
+                                Homeowner
+                            </option>
+                            <option value={USER_ROLES.PROVIDER}>
+                                Tradesperson
+                            </option>
                         </select>
                     </div>
 
@@ -166,10 +164,26 @@ export default function RegisterForm() {
                     )}
 
                     <Button type="submit" className="w-full">
-                        Register
+                        Create account
                     </Button>
                 </form>
-            </CardContent>
+    );
+
+    if (embedded) {
+        return form;
+    }
+
+    return (
+        <Card className="w-full max-w-lg">
+            <CardHeader>
+                <CardTitle>Create account</CardTitle>
+                <CardDescription>
+                    Join as a homeowner looking for services or a tradesperson
+                    offering them.
+                </CardDescription>
+            </CardHeader>
+
+            <CardContent>{form}</CardContent>
         </Card>
     );
 }
