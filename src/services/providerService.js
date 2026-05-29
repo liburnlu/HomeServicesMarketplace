@@ -44,6 +44,19 @@ export function mapProviderRow(row, reviewStats = {}) {
     };
 }
 
+function buildReviewStats(reviews) {
+    const statsByProvider = {};
+    for (const review of reviews ?? []) {
+        if (!review.provider_id) continue;
+        if (!statsByProvider[review.provider_id]) {
+            statsByProvider[review.provider_id] = { total: 0, count: 0 };
+        }
+        statsByProvider[review.provider_id].total += review.rating;
+        statsByProvider[review.provider_id].count += 1;
+    }
+    return statsByProvider;
+}
+
 export async function listProviders() {
     const { data, error } = await supabase
         .from("provider_profiles")
@@ -62,20 +75,17 @@ export async function listProviders() {
 
     if (error) throw error;
 
-    const { data: reviews, error: reviewsError } = await supabase
-        .from("reviews")
-        .select("provider_id, rating");
+    let statsByProvider = {};
+    try {
+        const { data: reviews, error: reviewsError } = await supabase
+            .from("reviews")
+            .select("provider_id, rating");
 
-    if (reviewsError) throw reviewsError;
-
-    const statsByProvider = {};
-    for (const review of reviews ?? []) {
-        if (!review.provider_id) continue;
-        if (!statsByProvider[review.provider_id]) {
-            statsByProvider[review.provider_id] = { total: 0, count: 0 };
+        if (!reviewsError) {
+            statsByProvider = buildReviewStats(reviews);
         }
-        statsByProvider[review.provider_id].total += review.rating;
-        statsByProvider[review.provider_id].count += 1;
+    } catch {
+        // Reviews are optional for the listing — don't block providers
     }
 
     return (data ?? []).map((row) => {
@@ -88,6 +98,50 @@ export async function listProviders() {
             : {};
         return mapProviderRow(row, reviewStats);
     });
+}
+
+export async function getProviderDetail(providerId) {
+    const { data, error } = await supabase
+        .from("provider_profiles")
+        .select(
+            `
+            *,
+            profiles (
+                id,
+                full_name,
+                city,
+                avatar_url,
+                phone_number
+            )
+        `
+        )
+        .eq("provider_id", providerId)
+        .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    let reviewStats = {};
+    try {
+        const { data: reviews, error: reviewsError } = await supabase
+            .from("reviews")
+            .select("rating")
+            .eq("provider_id", providerId);
+
+        if (!reviewsError && reviews?.length) {
+            const count = reviews.length;
+            const avgRating = Number(
+                (
+                    reviews.reduce((sum, r) => sum + r.rating, 0) / count
+                ).toFixed(1)
+            );
+            reviewStats = { count, avgRating };
+        }
+    } catch {
+        // optional
+    }
+
+    return mapProviderRow(data, reviewStats);
 }
 
 export async function getProviderProfileById(providerId) {

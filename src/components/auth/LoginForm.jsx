@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,8 @@ const AUTH_MODES = {
 
 export default function LoginForm({ defaultMode = AUTH_MODES.LOGIN }) {
     const navigate = useNavigate();
+    const location = useLocation();
+    const redirectTo = location.state?.from?.pathname ?? "/home";
     const { login } = useAuth();
     const [mode, setMode] = useState(defaultMode);
     const [error, setError] = useState(null);
@@ -37,7 +39,7 @@ export default function LoginForm({ defaultMode = AUTH_MODES.LOGIN }) {
 
         try {
             await login(email, password);
-            navigate("/home");
+            navigate(redirectTo, { replace: true });
         } catch (err) {
             setError(err.message ?? "Sign in failed. Check your email and password.");
         } finally {

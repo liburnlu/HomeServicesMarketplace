@@ -68,6 +68,14 @@ export default function Onboarding() {
                     </Button>
                     <Button
                         asChild
+                        variant="secondary"
+                        size="lg"
+                        className="w-full"
+                    >
+                        <Link to="/home">Browse tradespeople</Link>
+                    </Button>
+                    <Button
+                        asChild
                         variant="outline"
                         size="lg"
                         className="w-full"

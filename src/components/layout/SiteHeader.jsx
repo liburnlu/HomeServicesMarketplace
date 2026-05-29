@@ -1,5 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Home, LogOut, MapPin, Search, User } from "lucide-react";
+import {
+    CalendarDays,
+    Home,
+    LayoutDashboard,
+    LogOut,
+    MapPin,
+    Search,
+    User,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
@@ -11,7 +19,8 @@ export default function SiteHeader({
     onLocationQueryChange,
 }) {
     const navigate = useNavigate();
-    const { isLoggedIn, profile, loading, logout } = useAuth();
+    const { isLoggedIn, profile, initializing, logout, isCustomer, isProvider } =
+        useAuth();
 
     function handleSubmit(e) {
         e.preventDefault();
@@ -65,27 +74,63 @@ export default function SiteHeader({
                 </form>
 
                 <nav className="ml-auto flex items-center gap-1">
-                    <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+                    <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
                         <Link to="/home">Browse</Link>
                     </Button>
-                    {loading ? (
+                    {isLoggedIn && isCustomer && (
+                        <Button
+                            asChild
+                            variant="ghost"
+                            size="sm"
+                            className="hidden md:inline-flex"
+                        >
+                            <Link to="/bookings">
+                                <CalendarDays className="size-4 sm:mr-1" />
+                                <span className="hidden lg:inline">Bookings</span>
+                            </Link>
+                        </Button>
+                    )}
+                    {isLoggedIn && isProvider && (
+                        <Button
+                            asChild
+                            variant="ghost"
+                            size="sm"
+                            className="hidden md:inline-flex"
+                        >
+                            <Link to="/dashboard">
+                                <LayoutDashboard className="size-4 sm:mr-1" />
+                                <span className="hidden lg:inline">Jobs</span>
+                            </Link>
+                        </Button>
+                    )}
+                    {initializing ? (
                         <span className="px-2 text-xs text-muted-foreground">
                             …
                         </span>
                     ) : isLoggedIn ? (
                         <>
-                            <span className="hidden max-w-32 truncate text-xs text-muted-foreground sm:inline">
-                                {profile?.full_name ?? "Account"}
-                            </span>
                             <Button
-                                type="button"
+                                asChild
                                 variant="outline"
                                 size="sm"
                                 className="gap-1.5"
+                            >
+                                <Link to="/account">
+                                    <User className="size-4" />
+                                    <span className="hidden max-w-24 truncate sm:inline">
+                                        {profile?.full_name ?? "Account"}
+                                    </span>
+                                </Link>
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                className="hidden sm:inline-flex"
                                 onClick={handleLogout}
+                                aria-label="Sign out"
                             >
                                 <LogOut className="size-4" />
-                                <span className="hidden sm:inline">Sign out</span>
                             </Button>
                         </>
                     ) : (

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { BadgeCheck, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,22 +10,17 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 
-function getInitials(name) {
-    return name
-        .split(" ")
-        .map((part) => part[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase();
-}
+import ProviderAvatar from "@/components/providers/ProviderAvatar";
 
 export default function ProviderCard({ provider }) {
     return (
         <Card size="sm" className="h-full">
             <CardHeader className="flex-row items-start gap-3 space-y-0">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium">
-                    {getInitials(provider.name)}
-                </div>
+                <ProviderAvatar
+                    name={provider.name}
+                    avatarUrl={provider.avatarUrl}
+                    size="sm"
+                />
                 <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-start justify-between gap-2">
                         <CardTitle className="truncate">{provider.name}</CardTitle>
@@ -69,11 +65,11 @@ export default function ProviderCard({ provider }) {
             </CardContent>
 
             <CardFooter className="gap-2">
-                <Button className="flex-1" size="sm">
-                    Request quote
+                <Button asChild className="flex-1" size="sm">
+                    <Link to={`/providers/${provider.id}/book`}>Book now</Link>
                 </Button>
-                <Button variant="outline" size="sm">
-                    View profile
+                <Button asChild variant="outline" size="sm">
+                    <Link to={`/providers/${provider.id}`}>View profile</Link>
                 </Button>
             </CardFooter>
         </Card>
