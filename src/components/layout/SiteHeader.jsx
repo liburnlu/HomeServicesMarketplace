@@ -1,7 +1,8 @@
-import { Link } from "react-router-dom";
-import { Home, MapPin, Search, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Home, LogOut, MapPin, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SiteHeader({
     serviceQuery,
@@ -9,8 +10,16 @@ export default function SiteHeader({
     locationQuery,
     onLocationQueryChange,
 }) {
+    const navigate = useNavigate();
+    const { isLoggedIn, profile, loading, logout } = useAuth();
+
     function handleSubmit(e) {
         e.preventDefault();
+    }
+
+    async function handleLogout() {
+        await logout();
+        navigate("/login");
     }
 
     return (
@@ -59,10 +68,34 @@ export default function SiteHeader({
                     <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
                         <Link to="/home">Browse</Link>
                     </Button>
-                    <Button variant="outline" size="sm" className="gap-1.5">
-                        <User className="size-4" />
-                        <span className="hidden sm:inline">Account</span>
-                    </Button>
+                    {loading ? (
+                        <span className="px-2 text-xs text-muted-foreground">
+                            …
+                        </span>
+                    ) : isLoggedIn ? (
+                        <>
+                            <span className="hidden max-w-32 truncate text-xs text-muted-foreground sm:inline">
+                                {profile?.full_name ?? "Account"}
+                            </span>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="gap-1.5"
+                                onClick={handleLogout}
+                            >
+                                <LogOut className="size-4" />
+                                <span className="hidden sm:inline">Sign out</span>
+                            </Button>
+                        </>
+                    ) : (
+                        <Button asChild variant="outline" size="sm" className="gap-1.5">
+                            <Link to="/login">
+                                <User className="size-4" />
+                                <span className="hidden sm:inline">Sign in</span>
+                            </Link>
+                        </Button>
+                    )}
                 </nav>
             </div>
 

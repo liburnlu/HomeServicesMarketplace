@@ -1,5 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import {
+    ensureUserProfile,
+    login as loginWithPassword,
+    logout as signOut,
+    registerUser,
+} from "@/services/authService";
 import { getProfileById } from "@/services/profileService.js";
 import { getProviderProfileById } from "@/services/providerService";
 
@@ -22,13 +28,23 @@ export function AuthProvider({ children }) {
 
         setAuthUser(user);
 
-        const userProfile = await getProfileById(user.id);
-        setProfile(userProfile);
+        try {
+            let userProfile = await getProfileById(user.id);
 
-        if (userProfile?.role === "provider") {
-            const provider = await getProviderProfileById(user.id);
-            setProviderProfile(provider);
-        } else {
+            if (!userProfile) {
+                userProfile = await ensureUserProfile(user);
+            }
+
+            setProfile(userProfile);
+
+            if (userProfile?.role === "provider") {
+                const provider = await getProviderProfileById(user.id);
+                setProviderProfile(provider);
+            } else {
+                setProviderProfile(null);
+            }
+        } catch {
+            setProfile(null);
             setProviderProfile(null);
         }
 
@@ -51,7 +67,7 @@ export function AuthProvider({ children }) {
         );
 
         return () => {
-            listener.subscription.unsubscribe();
+            listener?.subscription?.unsubscribe();
         };
     }, []);
 
@@ -63,6 +79,9 @@ export function AuthProvider({ children }) {
         isLoggedIn: !!authUser,
         isCustomer: profile?.role === "customer",
         isProvider: profile?.role === "provider",
+        login: loginWithPassword,
+        register: registerUser,
+        logout: signOut,
         reloadUser: () => loadUserData(authUser),
     };
 
@@ -70,5 +89,9 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error("useAuth must be used within AuthProvider");
+    }
+    return context;
 }

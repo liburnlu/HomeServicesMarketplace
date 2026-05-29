@@ -1,14 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ShieldCheck, Star, Users } from "lucide-react";
 import SiteHeader from "@/components/layout/SiteHeader";
 import CategoryGrid from "@/components/home/CategoryGrid";
 import ProviderCard from "@/components/home/ProviderCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-    MOCK_PROVIDERS,
-    SERVICE_CATEGORIES,
-} from "@/data/mockData";
+import { SERVICE_CATEGORIES } from "@/data/mockData";
+import { listProviders } from "@/services/providerService";
 
 const TRUST_STATS = [
     { icon: Users, label: "2,400+ jobs posted" },
@@ -17,15 +15,45 @@ const TRUST_STATS = [
 ];
 
 export default function Home() {
+    const [providers, setProviders] = useState([]);
+    const [loadError, setLoadError] = useState(null);
+    const [loadingProviders, setLoadingProviders] = useState(true);
     const [serviceQuery, setServiceQuery] = useState("");
     const [locationQuery, setLocationQuery] = useState("");
     const [activeCategory, setActiveCategory] = useState(null);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadProviders() {
+            setLoadingProviders(true);
+            setLoadError(null);
+
+            try {
+                const data = await listProviders();
+                if (!cancelled) setProviders(data);
+            } catch (err) {
+                if (!cancelled) {
+                    setLoadError(
+                        err.message ?? "Could not load tradespeople from Supabase."
+                    );
+                }
+            } finally {
+                if (!cancelled) setLoadingProviders(false);
+            }
+        }
+
+        loadProviders();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const filteredProviders = useMemo(() => {
         const service = serviceQuery.trim().toLowerCase();
         const location = locationQuery.trim().toLowerCase();
 
-        return MOCK_PROVIDERS.filter((provider) => {
+        return providers.filter((provider) => {
             const matchesCategory =
                 !activeCategory || provider.category === activeCategory;
 
@@ -34,6 +62,9 @@ export default function Home() {
                 provider.categoryLabel.toLowerCase().includes(service) ||
                 provider.bio.toLowerCase().includes(service) ||
                 provider.name.toLowerCase().includes(service) ||
+                provider.skills?.some((skill) =>
+                    skill.toLowerCase().includes(service)
+                ) ||
                 SERVICE_CATEGORIES.find((c) => c.id === provider.category)
                     ?.label.toLowerCase()
                     .includes(service);
@@ -43,7 +74,7 @@ export default function Home() {
 
             return matchesCategory && matchesService && matchesLocation;
         });
-    }, [activeCategory, serviceQuery, locationQuery]);
+    }, [activeCategory, serviceQuery, locationQuery, providers]);
 
     return (
         <div className="min-h-svh bg-background">
@@ -113,9 +144,11 @@ export default function Home() {
                                 Top-rated near you
                             </h2>
                             <p className="mt-1 text-sm text-muted-foreground">
-                                {filteredProviders.length} tradesperson
-                                {filteredProviders.length === 1 ? "" : "s"}{" "}
-                                available
+                                {loadingProviders
+                                    ? "Loading tradespeople…"
+                                    : `${filteredProviders.length} tradesperson${
+                                          filteredProviders.length === 1 ? "" : "s"
+                                      } available`}
                             </p>
                         </div>
                         {(activeCategory || serviceQuery || locationQuery) && (
@@ -134,7 +167,21 @@ export default function Home() {
                         )}
                     </div>
 
-                    {filteredProviders.length > 0 ? (
+                    {loadError && (
+                        <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 px-6 py-8 text-center">
+                            <p className="text-sm font-medium text-destructive">
+                                {loadError}
+                            </p>
+                        </div>
+                    )}
+
+                    {!loadError && loadingProviders && (
+                        <p className="mt-4 text-sm text-muted-foreground">
+                            Fetching provider profiles from Supabase…
+                        </p>
+                    )}
+
+                    {!loadError && !loadingProviders && filteredProviders.length > 0 && (
                         <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             {filteredProviders.map((provider) => (
                                 <li key={provider.id}>
@@ -142,29 +189,33 @@ export default function Home() {
                                 </li>
                             ))}
                         </ul>
-                    ) : (
-                        <div className="mt-4 rounded-xl border border-dashed bg-muted/30 px-6 py-12 text-center">
-                            <p className="text-sm font-medium">
-                                No tradespeople match your search
-                            </p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                Try another category or broaden your location.
-                            </p>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="mt-4"
-                                onClick={() => {
-                                    setActiveCategory(null);
-                                    setServiceQuery("");
-                                    setLocationQuery("");
-                                }}
-                            >
-                                Reset search
-                            </Button>
-                        </div>
                     )}
+
+                    {!loadError &&
+                        !loadingProviders &&
+                        filteredProviders.length === 0 && (
+                            <div className="mt-4 rounded-xl border border-dashed bg-muted/30 px-6 py-12 text-center">
+                                <p className="text-sm font-medium">
+                                    No tradespeople match your search
+                                </p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Try another category or broaden your location.
+                                </p>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-4"
+                                    onClick={() => {
+                                        setActiveCategory(null);
+                                        setServiceQuery("");
+                                        setLocationQuery("");
+                                    }}
+                                >
+                                    Reset search
+                                </Button>
+                            </div>
+                        )}
                 </section>
             </main>
         </div>

@@ -11,6 +11,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import RegisterForm from "@/components/auth/RegisterForm";
+import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 
 const AUTH_MODES = {
@@ -20,19 +21,28 @@ const AUTH_MODES = {
 
 export default function LoginForm({ defaultMode = AUTH_MODES.LOGIN }) {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [mode, setMode] = useState(defaultMode);
+    const [error, setError] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
 
-    function handleLoginSubmit(e) {
+    async function handleLoginSubmit(e) {
         e.preventDefault();
+        setError(null);
+        setSubmitting(true);
 
         const formData = new FormData(e.currentTarget);
-        const email = formData.get("email");
+        const email = String(formData.get("email") ?? "").trim();
         const password = formData.get("password");
 
-        console.log({ email, password });
-
-        // later: Supabase login here
-        navigate("/home");
+        try {
+            await login(email, password);
+            navigate("/home");
+        } catch (err) {
+            setError(err.message ?? "Sign in failed. Check your email and password.");
+        } finally {
+            setSubmitting(false);
+        }
     }
 
     const isLogin = mode === AUTH_MODES.LOGIN;
@@ -91,7 +101,8 @@ export default function LoginForm({ defaultMode = AUTH_MODES.LOGIN }) {
                                 id="login-email"
                                 name="email"
                                 type="email"
-                                placeholder="you@example.com"
+                                placeholder="your.name@gmail.com"
+                                autoComplete="email"
                                 required
                             />
                         </div>
@@ -103,12 +114,20 @@ export default function LoginForm({ defaultMode = AUTH_MODES.LOGIN }) {
                                 name="password"
                                 type="password"
                                 placeholder="••••••••"
+                                autoComplete="current-password"
+                                minLength={6}
                                 required
                             />
                         </div>
 
-                        <Button type="submit" className="w-full">
-                            Sign in
+                        {error && (
+                            <p className="text-sm text-destructive" role="alert">
+                                {error}
+                            </p>
+                        )}
+
+                        <Button type="submit" className="w-full" disabled={submitting}>
+                            {submitting ? "Signing in…" : "Sign in"}
                         </Button>
                     </form>
                 ) : (

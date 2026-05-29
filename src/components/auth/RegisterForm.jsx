@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContext";
 
 const USER_ROLES = {
     CUSTOMER: "customer",
@@ -18,41 +19,51 @@ const USER_ROLES = {
 
 export default function RegisterForm({ embedded = false }) {
     const navigate = useNavigate();
+    const { register } = useAuth();
     const [role, setRole] = useState(USER_ROLES.CUSTOMER);
+    const [error, setError] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault();
+        setError(null);
+        setSubmitting(true);
 
         const formData = new FormData(e.currentTarget);
 
         const registerData = {
-            fullName: formData.get("fullName"),
-            email: formData.get("email"),
+            fullName: String(formData.get("fullName") ?? "").trim(),
+            email: String(formData.get("email") ?? "").trim(),
             password: formData.get("password"),
-            phoneNumber: formData.get("phoneNumber"),
-            city: formData.get("city"),
+            phoneNumber: formData.get("phoneNumber") || null,
+            city: formData.get("city") || null,
             role: formData.get("role"),
         };
 
         if (registerData.role === USER_ROLES.PROVIDER) {
-            registerData.providerProfile = {
-                category: formData.get("category"),
-                bio: formData.get("bio"),
-                skills: formData
-                    .get("skills")
-                    ?.split(",")
-                    .map((skill) => skill.trim())
-                    .filter(Boolean),
-            };
+            registerData.category = formData.get("category");
+            registerData.bio = formData.get("bio") || null;
+            registerData.skills = formData
+                .get("skills")
+                ?.split(",")
+                .map((skill) => skill.trim())
+                .filter(Boolean);
         }
 
-        console.log(registerData);
-
-        // Later flow:
-        // 1. supabase.auth.signUp({ email, password })
-        // 2. insert into public.profiles using returned user.id
-        // 3. if role === "provider", insert into public.provider_profiles
-        navigate("/home");
+        try {
+            const data = await register(registerData);
+            if (!data.session) {
+                setError(
+                    "Account created. Check your email to confirm your address, then sign in. (Avoid addresses like test@gmail.com — Supabase rejects them.)"
+                );
+                return;
+            }
+            navigate("/home");
+        } catch (err) {
+            setError(err.message ?? "Registration failed. Please try again.");
+        } finally {
+            setSubmitting(false);
+        }
     }
 
     const form = (
@@ -74,9 +85,15 @@ export default function RegisterForm({ embedded = false }) {
                             id="email"
                             name="email"
                             type="email"
-                            placeholder="you@example.com"
+                            placeholder="your.name@gmail.com"
+                            autoComplete="email"
                             required
                         />
+                        <p className="text-xs text-muted-foreground">
+                            Use a real email you can access. Addresses like{" "}
+                            <span className="font-medium">test@gmail.com</span> are
+                            blocked by Supabase.
+                        </p>
                     </div>
 
                     <div className="space-y-2">
@@ -86,6 +103,8 @@ export default function RegisterForm({ embedded = false }) {
                             name="password"
                             type="password"
                             placeholder="••••••••"
+                            autoComplete="new-password"
+                            minLength={6}
                             required
                         />
                     </div>
@@ -163,8 +182,14 @@ export default function RegisterForm({ embedded = false }) {
                         </div>
                     )}
 
-                    <Button type="submit" className="w-full">
-                        Create account
+                    {error && (
+                        <p className="text-sm text-destructive" role="alert">
+                            {error}
+                        </p>
+                    )}
+
+                    <Button type="submit" className="w-full" disabled={submitting}>
+                        {submitting ? "Creating account…" : "Create account"}
                     </Button>
                 </form>
     );
