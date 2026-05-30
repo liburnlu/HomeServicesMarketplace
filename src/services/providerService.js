@@ -1,3 +1,4 @@
+import { getMockReviewStats } from "@/data/mockReviews";
 import { supabase } from "@/lib/supabase";
 
 const CATEGORY_ID_MAP = {
@@ -95,7 +96,7 @@ export async function listProviders() {
                   count: stats.count,
                   avgRating: Number((stats.total / stats.count).toFixed(1)),
               }
-            : {};
+            : getMockReviewStats(row.provider_id);
         return mapProviderRow(row, reviewStats);
     });
 }
@@ -136,9 +137,11 @@ export async function getProviderDetail(providerId) {
                 ).toFixed(1)
             );
             reviewStats = { count, avgRating };
+        } else {
+            reviewStats = getMockReviewStats(providerId);
         }
     } catch {
-        // optional
+        reviewStats = getMockReviewStats(providerId);
     }
 
     return mapProviderRow(data, reviewStats);
@@ -164,4 +167,26 @@ export async function createProviderProfile(providerProfile) {
 
     if (error) throw error;
     return data;
+}
+
+export async function updateProviderProfile(providerId, updates) {
+    const { data, error } = await supabase
+        .from("provider_profiles")
+        .update(updates)
+        .eq("provider_id", providerId)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+}
+
+export async function saveProviderProfile(providerId, fields, existing) {
+    if (existing) {
+        return updateProviderProfile(providerId, fields);
+    }
+    return createProviderProfile({
+        provider_id: providerId,
+        ...fields,
+    });
 }

@@ -26,19 +26,22 @@ export function AuthProvider({ children }) {
             setProfile(null);
             setProviderProfile(null);
             setLoading(false);
-            return;
+            return null;
         }
 
         if (!force && lastLoadedUserId.current === user.id) {
             setLoading(false);
-            return;
+            return profile;
         }
 
+        setLoading(true);
         lastLoadedUserId.current = user.id;
         setAuthUser(user);
 
+        let userProfile = null;
+
         try {
-            let userProfile = await getProfileById(user.id);
+            userProfile = await getProfileById(user.id);
 
             if (!userProfile) {
                 userProfile = await ensureUserProfile(user);
@@ -59,6 +62,8 @@ export function AuthProvider({ children }) {
         } finally {
             setLoading(false);
         }
+
+        return userProfile;
     }
 
     useEffect(() => {
@@ -101,12 +106,12 @@ export function AuthProvider({ children }) {
 
         const result = await loginWithPassword(email, password);
 
-        if (result?.data?.user) {
-            await loadUserData(result.data.user, true);
-        } else {
-            setLoading(false);
+        if (result?.user) {
+            const userProfile = await loadUserData(result.user, true);
+            return { ...result, profile: userProfile };
         }
 
+        setLoading(false);
         return result;
     }
 
@@ -115,12 +120,12 @@ export function AuthProvider({ children }) {
 
         const result = await registerUser(...args);
 
-        if (result?.data?.user) {
-            await loadUserData(result.data.user, true);
-        } else {
-            setLoading(false);
+        if (result?.user && result?.session) {
+            const userProfile = await loadUserData(result.user, true);
+            return { ...result, profile: userProfile };
         }
 
+        setLoading(false);
         return result;
     }
 
@@ -135,6 +140,7 @@ export function AuthProvider({ children }) {
         profile,
         providerProfile,
         loading,
+        initializing: loading,
         isLoggedIn: !!authUser,
         isCustomer: profile?.role === "customer",
         isProvider: profile?.role === "provider",

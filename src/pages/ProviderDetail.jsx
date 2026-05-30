@@ -69,7 +69,7 @@ export default function ProviderDetail() {
             return;
         }
         if (profile && !isCustomer) {
-            navigate("/dashboard");
+            navigate("/provider");
             return;
         }
         navigate(`/providers/${id}/book`);

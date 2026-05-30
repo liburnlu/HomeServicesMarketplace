@@ -58,7 +58,9 @@ export default function RegisterForm({ embedded = false }) {
                 );
                 return;
             }
-            navigate("/home");
+            navigate(
+                registerData.role === USER_ROLES.PROVIDER ? "/provider" : "/home"
+            );
         } catch (err) {
             setError(err.message ?? "Registration failed. Please try again.");
         } finally {

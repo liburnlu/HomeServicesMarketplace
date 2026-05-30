@@ -1,18 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { Briefcase, Inbox } from "lucide-react";
-import AppShell from "@/components/layout/AppShell";
 import BookingCard from "@/components/bookings/BookingCard";
-import {
-    Card,
-    CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import {
     getProviderBookings,
     updateBookingStatus,
 } from "@/services/bookingService";
 
-export default function ProviderDashboard() {
+export default function ProviderJobs() {
     const { authUser, providerProfile, profile } = useAuth();
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -96,15 +92,17 @@ export default function ProviderDashboard() {
     }
 
     return (
-        <AppShell
-            title="Job inbox"
-            subtitle={
-                providerProfile?.category
-                    ? `${profile?.full_name} · ${providerProfile.category}`
-                    : profile?.full_name
-            }
-        >
-            <div className="mb-6 grid gap-3 sm:grid-cols-3">
+        <div className="space-y-8">
+            <header className="space-y-1">
+                <h1 className="text-2xl font-medium tracking-tight">Job inbox</h1>
+                <p className="text-sm text-muted-foreground">
+                    {providerProfile?.category
+                        ? `${profile?.full_name} · ${providerProfile.category}`
+                        : profile?.full_name}
+                </p>
+            </header>
+
+            <div className="grid gap-3 sm:grid-cols-3">
                 <Card className="bg-primary/5">
                     <CardContent className="flex items-center gap-3 pt-6">
                         <Inbox className="size-8 text-primary" />
@@ -149,7 +147,7 @@ export default function ProviderDashboard() {
             )}
 
             {error && (
-                <p className="mb-4 text-sm text-destructive" role="alert">
+                <p className="text-sm text-destructive" role="alert">
                     {error}
                 </p>
             )}
@@ -169,6 +167,6 @@ export default function ProviderDashboard() {
                     {renderSection("History", past, "No past jobs yet.")}
                 </div>
             )}
-        </AppShell>
+        </div>
     );
 }

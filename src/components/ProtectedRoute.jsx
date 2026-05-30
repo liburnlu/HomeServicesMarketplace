@@ -24,7 +24,7 @@ export default function ProtectedRoute({
     }
 
     if (requireRole === "customer" && !isCustomer) {
-        return <Navigate to="/dashboard" replace />;
+        return <Navigate to="/provider" replace />;
     }
 
     if (requireRole === "provider" && !isProvider) {

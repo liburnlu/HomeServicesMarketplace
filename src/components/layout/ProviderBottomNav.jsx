@@ -1,49 +1,31 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { CalendarDays, Home, User } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Briefcase, LayoutDashboard, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
 
-const BASE_ITEMS = [
-    { to: "/home", label: "Browse", icon: Home },
-    { to: "/bookings", label: "Bookings", icon: CalendarDays, auth: true },
-    { to: "/account", label: "Account", icon: User, auth: true },
+const NAV_ITEMS = [
+    { to: "/provider", label: "Home", icon: LayoutDashboard, end: true },
+    { to: "/provider/jobs", label: "Jobs", icon: Briefcase },
+    { to: "/provider/account", label: "Account", icon: User },
 ];
 
-export default function BottomNav() {
+export default function ProviderBottomNav() {
     const location = useLocation();
-    const navigate = useNavigate();
-    const { isLoggedIn, isProvider, initializing } = useAuth();
-
-    if (isProvider) {
-        return null;
-    }
-
-    const items = [...BASE_ITEMS];
-
-    function handleNavClick(e, item) {
-        if (item.auth && !isLoggedIn && !initializing) {
-            e.preventDefault();
-            navigate("/login", { state: { from: { pathname: item.to } } });
-        }
-    }
 
     return (
         <nav
             className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 backdrop-blur md:hidden"
-            aria-label="Main navigation"
+            aria-label="Tradesperson navigation"
         >
             <ul className="mx-auto flex max-w-lg">
-                {items.map((item) => {
-                    const { to, label, icon: Icon } = item;
-                    const active =
-                        location.pathname === to ||
-                        (to !== "/home" && location.pathname.startsWith(to));
+                {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => {
+                    const active = end
+                        ? location.pathname === to
+                        : location.pathname.startsWith(to);
 
                     return (
                         <li key={to} className="flex-1">
                             <Link
                                 to={to}
-                                onClick={(e) => handleNavClick(e, { to, auth: item.auth })}
                                 className={cn(
                                     "flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors",
                                     active

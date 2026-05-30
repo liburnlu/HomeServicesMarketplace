@@ -1,25 +1,12 @@
 import { Link } from "react-router-dom";
-import {
-    CalendarDays,
-    LayoutDashboard,
-    LogOut,
-    Mail,
-    MapPin,
-    Phone,
-    User,
-    Wrench,
-} from "lucide-react";
+import { CalendarDays, LogOut, User } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
+import ProfileEditForm from "@/components/profile/ProfileEditForm";
 import ProviderAvatar from "@/components/providers/ProviderAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -28,7 +15,6 @@ export default function Account() {
     const {
         authUser,
         profile,
-        providerProfile,
         isCustomer,
         isProvider,
         logout,
@@ -42,6 +28,10 @@ export default function Account() {
 
     if (initializing) {
         return null;
+    }
+
+    if (isProvider) {
+        return <Navigate to="/provider/account" replace />;
     }
 
     return (
@@ -62,52 +52,14 @@ export default function Account() {
                                     {profile?.full_name ?? "Your account"}
                                 </h2>
                                 <Badge className="mt-2 bg-primary/10 text-primary">
-                                    {isProvider ? "Tradesperson" : "Homeowner"}
+                                    Homeowner
                                 </Badge>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Details</CardTitle>
-                        <CardDescription>
-                            Information from your registration
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4 text-sm">
-                        <div className="flex gap-3">
-                            <Mail className="size-4 shrink-0 text-muted-foreground" />
-                            <span>{authUser?.email}</span>
-                        </div>
-                        {profile?.phone_number && (
-                            <div className="flex gap-3">
-                                <Phone className="size-4 shrink-0 text-muted-foreground" />
-                                <span>{profile.phone_number}</span>
-                            </div>
-                        )}
-                        {profile?.city && (
-                            <div className="flex gap-3">
-                                <MapPin className="size-4 shrink-0 text-muted-foreground" />
-                                <span>{profile.city}</span>
-                            </div>
-                        )}
-                        {isProvider && providerProfile && (
-                            <>
-                                <div className="flex gap-3">
-                                    <Wrench className="size-4 shrink-0 text-muted-foreground" />
-                                    <span>{providerProfile.category}</span>
-                                </div>
-                                {providerProfile.bio && (
-                                    <p className="rounded-lg bg-muted/50 p-3 text-muted-foreground">
-                                        {providerProfile.bio}
-                                    </p>
-                                )}
-                            </>
-                        )}
-                    </CardContent>
-                </Card>
+                <ProfileEditForm />
 
                 <Card>
                     <CardHeader>
@@ -126,28 +78,18 @@ export default function Account() {
                                 </Link>
                             </Button>
                         )}
-                        {isProvider && (
+                        {isCustomer && (
                             <Button
                                 asChild
                                 variant="outline"
                                 className="justify-start gap-2"
                             >
-                                <Link to="/dashboard">
-                                    <LayoutDashboard className="size-4" />
-                                    Job inbox
+                                <Link to="/home">
+                                    <User className="size-4" />
+                                    Browse tradespeople
                                 </Link>
                             </Button>
                         )}
-                        <Button
-                            asChild
-                            variant="outline"
-                            className="justify-start gap-2"
-                        >
-                            <Link to="/home">
-                                <User className="size-4" />
-                                Browse tradespeople
-                            </Link>
-                        </Button>
                     </CardContent>
                 </Card>
 

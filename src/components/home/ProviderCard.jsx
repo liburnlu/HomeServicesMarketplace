@@ -34,7 +34,7 @@ export default function ProviderCard({ provider }) {
             return;
         }
         if (profile && !isCustomer) {
-            navigate("/dashboard");
+            navigate("/provider");
             return;
         }
         navigate(bookPath);

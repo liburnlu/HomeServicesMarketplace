@@ -35,7 +35,7 @@ export default function SiteHeader({
         <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
             <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 md:h-16 md:px-6">
                 <Link
-                    to="/home"
+                    to={isLoggedIn && isProvider ? "/provider" : "/home"}
                     className="flex shrink-0 items-center gap-2 font-medium"
                 >
                     <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -74,9 +74,6 @@ export default function SiteHeader({
                 </form>
 
                 <nav className="ml-auto flex items-center gap-1">
-                    <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
-                        <Link to="/home">Browse</Link>
-                    </Button>
                     {isLoggedIn && isCustomer && (
                         <Button
                             asChild
@@ -97,9 +94,9 @@ export default function SiteHeader({
                             size="sm"
                             className="hidden md:inline-flex"
                         >
-                            <Link to="/dashboard">
+                            <Link to="/provider">
                                 <LayoutDashboard className="size-4 sm:mr-1" />
-                                <span className="hidden lg:inline">Jobs</span>
+                                <span className="hidden lg:inline">Hub</span>
                             </Link>
                         </Button>
                     )}
@@ -115,7 +112,13 @@ export default function SiteHeader({
                                 size="sm"
                                 className="gap-1.5"
                             >
-                                <Link to="/account">
+                                <Link
+                                    to={
+                                        isProvider
+                                            ? "/provider/account"
+                                            : "/account"
+                                    }
+                                >
                                     <User className="size-4" />
                                     <span className="hidden max-w-24 truncate sm:inline">
                                         {profile?.full_name ?? "Account"}

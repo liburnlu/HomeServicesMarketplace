@@ -38,8 +38,10 @@ export default function LoginForm({ defaultMode = AUTH_MODES.LOGIN }) {
         const password = formData.get("password");
 
         try {
-            await login(email, password);
-            navigate(redirectTo, { replace: true });
+            const result = await login(email, password);
+            const destination =
+                result?.profile?.role === "provider" ? "/provider" : redirectTo;
+            navigate(destination, { replace: true });
         } catch (err) {
             setError(err.message ?? "Sign in failed. Check your email and password.");
         } finally {

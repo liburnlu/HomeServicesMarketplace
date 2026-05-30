@@ -1,3 +1,4 @@
+import { withMockReviewsIfEmpty } from "@/data/mockReviews";
 import { supabase } from "@/lib/supabase";
 
 export async function createReview(review) {
@@ -19,5 +20,5 @@ export async function getProviderReviews(providerId) {
         .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return data;
+    return withMockReviewsIfEmpty(providerId, data ?? []);
 }

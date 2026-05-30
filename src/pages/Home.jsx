@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { ShieldCheck, Star, Users } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
+import { useAuth } from "@/context/AuthContext";
 import CategoryGrid from "@/components/home/CategoryGrid";
 import ProviderCard from "@/components/home/ProviderCard";
 import { Button } from "@/components/ui/button";
@@ -16,6 +18,7 @@ const TRUST_STATS = [
 ];
 
 export default function Home() {
+    const { isProvider, initializing } = useAuth();
     const [providers, setProviders] = useState([]);
     const [loadError, setLoadError] = useState(null);
     const [loadingProviders, setLoadingProviders] = useState(true);
@@ -90,6 +93,10 @@ export default function Home() {
             return matchesCategory && matchesService && matchesLocation;
         });
     }, [activeCategory, serviceQuery, locationQuery, providers]);
+
+    if (!initializing && isProvider) {
+        return <Navigate to="/provider" replace />;
+    }
 
     return (
         <AppShell
