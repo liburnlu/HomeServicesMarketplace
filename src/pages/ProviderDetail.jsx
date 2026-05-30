@@ -63,7 +63,9 @@ export default function ProviderDetail() {
 
     function handleBook() {
         if (!isLoggedIn) {
-            navigate("/login", { state: { from: `/providers/${id}/book` } });
+            navigate("/login", {
+                state: { from: { pathname: `/providers/${id}/book` } },
+            });
             return;
         }
         if (profile && !isCustomer) {
