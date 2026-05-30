@@ -1,5 +1,7 @@
+import { Link, useNavigate } from "react-router-dom";
 import { BadgeCheck, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 import {
     Card,
     CardContent,
@@ -19,6 +21,25 @@ function getInitials(name) {
 }
 
 export default function ProviderCard({ provider }) {
+    const navigate = useNavigate();
+    const { authUser, isLoggedIn, isCustomer, profile } = useAuth();
+    const isOwnProfile = authUser?.id === provider.id;
+    const bookPath = `/providers/${provider.id}/book`;
+
+    function handleRequestQuote() {
+        if (!isLoggedIn) {
+            navigate("/login", {
+                state: { from: { pathname: bookPath } },
+            });
+            return;
+        }
+        if (profile && !isCustomer) {
+            navigate("/dashboard");
+            return;
+        }
+        navigate(bookPath);
+    }
+
     return (
         <Card size="sm" className="h-full">
             <CardHeader className="flex-row items-start gap-3 space-y-0">
@@ -69,13 +90,22 @@ export default function ProviderCard({ provider }) {
             </CardContent>
 
             <CardFooter className="gap-2">
-                <Button className="flex-1" size="sm" onClick={()=>{
-                    console.log("provider");
-                }}>
-                    Request quote
-                </Button>
-                <Button variant="outline" size="sm">
-                    View profile
+                {!isOwnProfile && (
+                    <Button
+                        className="flex-1"
+                        size="sm"
+                        onClick={handleRequestQuote}
+                    >
+                        Request quote
+                    </Button>
+                )}
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className={isOwnProfile ? "flex-1" : undefined}
+                    asChild
+                >
+                    <Link to={`/providers/${provider.id}`}>View profile</Link>
                 </Button>
             </CardFooter>
         </Card>
