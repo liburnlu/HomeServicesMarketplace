@@ -22,7 +22,8 @@ function parseSkills(value) {
         .filter(Boolean);
 }
 
-export default function ProfileEditForm({ isProvider = false }) {
+export default function ProfileEditForm({ isProvider = false, role }) {
+    const isTradesperson = role === "provider" || isProvider;
     const { authUser, profile, providerProfile, reloadUser } = useAuth();
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
@@ -52,7 +53,7 @@ export default function ProfileEditForm({ isProvider = false }) {
                 city: String(formData.get("city") ?? "").trim() || null,
             });
 
-            if (isProvider) {
+            if (isTradesperson) {
                 const category = String(formData.get("category") ?? "").trim();
                 if (!category) {
                     setError("Service category is required.");
@@ -85,7 +86,9 @@ export default function ProfileEditForm({ isProvider = false }) {
             <CardHeader>
                 <CardTitle className="text-base">Edit profile</CardTitle>
                 <CardDescription>
-                    Update your details. Email cannot be changed here.
+                    {isTradesperson
+                        ? "Update your contact details and service information. Email cannot be changed here."
+                        : "Update your name, phone, and city for bookings. Email cannot be changed here."}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -136,7 +139,7 @@ export default function ProfileEditForm({ isProvider = false }) {
                         />
                     </div>
 
-                    {isProvider && (
+                    {isTradesperson && (
                         <div className="space-y-4 rounded-lg border p-4">
                             <p className="text-sm font-medium">Service details</p>
 

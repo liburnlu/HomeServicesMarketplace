@@ -1,3 +1,4 @@
+import { assertSingleRow, wrapSupabaseError } from "@/lib/supabaseRow";
 import { supabase } from "@/lib/supabase";
 
 export async function createBooking(booking) {
@@ -5,10 +6,13 @@ export async function createBooking(booking) {
     .from("bookings")
     .insert(booking)
     .select()
-    .single();
+    .maybeSingle();
 
-  if (error) throw error;
-  return data;
+  if (error) {
+    throw wrapSupabaseError(error, "Could not create this booking.");
+  }
+
+  return assertSingleRow(data, "Booking was not created. Check Supabase policies on bookings.");
 }
 
 export async function getCustomerBookings(customerId) {
@@ -40,10 +44,13 @@ export async function updateBookingStatus(bookingId, status) {
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", bookingId)
     .select()
-    .single();
+    .maybeSingle();
 
-  if (error) throw error;
-  return data;
+  if (error) {
+    throw wrapSupabaseError(error, "Could not update this booking.");
+  }
+
+  return assertSingleRow(data, "Booking was not updated. You may not have permission.");
 }
 
 export async function getProviderBookings(providerId) {

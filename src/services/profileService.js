@@ -1,3 +1,4 @@
+import { assertSingleRow, wrapSupabaseError } from "@/lib/supabaseRow";
 import { supabase } from "@/lib/supabase";
 
 export async function getProfileById(userId) {
@@ -28,8 +29,17 @@ export async function updateProfile(userId, updates) {
         .update(updates)
         .eq("id", userId)
         .select()
-        .single();
+        .maybeSingle();
 
-    if (error) throw error;
-    return data;
+    if (error) {
+        throw wrapSupabaseError(
+            error,
+            "Could not update your profile. Add a Supabase policy allowing users to update their own profile row."
+        );
+    }
+
+    return assertSingleRow(
+        data,
+        "Profile was not updated. Ensure you are signed in and row-level security allows updates to your profile."
+    );
 }

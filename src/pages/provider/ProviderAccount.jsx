@@ -48,7 +48,7 @@ export default function ProviderAccount() {
                 </CardContent>
             </Card>
 
-            <ProfileEditForm isProvider />
+            <ProfileEditForm role="provider" isProvider />
 
             <Card>
                 <CardHeader>

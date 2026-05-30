@@ -1,4 +1,5 @@
 import { getMockReviewStats } from "@/data/mockReviews";
+import { assertSingleRow, wrapSupabaseError } from "@/lib/supabaseRow";
 import { supabase } from "@/lib/supabase";
 
 const CATEGORY_ID_MAP = {
@@ -175,10 +176,19 @@ export async function updateProviderProfile(providerId, updates) {
         .update(updates)
         .eq("provider_id", providerId)
         .select()
-        .single();
+        .maybeSingle();
 
-    if (error) throw error;
-    return data;
+    if (error) {
+        throw wrapSupabaseError(
+            error,
+            "Could not update your tradesperson profile. Check Supabase policies on provider_profiles."
+        );
+    }
+
+    return assertSingleRow(
+        data,
+        "Tradesperson profile was not updated. Check permissions or create a provider profile first."
+    );
 }
 
 export async function saveProviderProfile(providerId, fields, existing) {

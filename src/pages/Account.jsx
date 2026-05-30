@@ -1,25 +1,22 @@
-import { Link } from "react-router-dom";
-import { CalendarDays, LogOut, User } from "lucide-react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { CalendarDays, Home, LogOut } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
+import AuthLoadingScreen from "@/components/AuthLoadingScreen";
 import ProfileEditForm from "@/components/profile/ProfileEditForm";
 import ProviderAvatar from "@/components/providers/ProviderAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Navigate } from "react-router-dom";
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 export default function Account() {
     const navigate = useNavigate();
-    const {
-        authUser,
-        profile,
-        isCustomer,
-        isProvider,
-        logout,
-        initializing,
-    } = useAuth();
+    const { authUser, profile, isProvider, logout, initializing } = useAuth();
 
     async function handleLogout() {
         await logout();
@@ -27,7 +24,7 @@ export default function Account() {
     }
 
     if (initializing) {
-        return null;
+        return <AuthLoadingScreen message="Loading account…" />;
     }
 
     if (isProvider) {
@@ -37,6 +34,15 @@ export default function Account() {
     return (
         <AppShell title="Account" subtitle="Your profile & settings">
             <div className="mx-auto max-w-lg space-y-6">
+                <header className="space-y-1 md:hidden">
+                    <h1 className="text-2xl font-medium tracking-tight">
+                        Account
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Your homeowner profile & settings
+                    </p>
+                </header>
+
                 <Card className="overflow-hidden">
                     <div className="h-20 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent" />
                     <CardContent className="relative pt-0">
@@ -59,37 +65,33 @@ export default function Account() {
                     </CardContent>
                 </Card>
 
-                <ProfileEditForm />
+                <ProfileEditForm role="homeowner" />
 
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-base">Quick links</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-2">
-                        {isCustomer && (
-                            <Button
-                                asChild
-                                variant="outline"
-                                className="justify-start gap-2"
-                            >
-                                <Link to="/bookings">
-                                    <CalendarDays className="size-4" />
-                                    My bookings
-                                </Link>
-                            </Button>
-                        )}
-                        {isCustomer && (
-                            <Button
-                                asChild
-                                variant="outline"
-                                className="justify-start gap-2"
-                            >
-                                <Link to="/home">
-                                    <User className="size-4" />
-                                    Browse tradespeople
-                                </Link>
-                            </Button>
-                        )}
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="justify-start gap-2"
+                        >
+                            <Link to="/bookings">
+                                <CalendarDays className="size-4" />
+                                My bookings
+                            </Link>
+                        </Button>
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="justify-start gap-2"
+                        >
+                            <Link to="/home">
+                                <Home className="size-4" />
+                                Browse tradespeople
+                            </Link>
+                        </Button>
                     </CardContent>
                 </Card>
 
